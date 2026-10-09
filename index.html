@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DZ Budget Tracker</title>
+
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+  <div class="app">
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">💰</div>
+        <div class="brand-text">
+          <div class="brand-title" data-i18n="appName">DZ Budget Tracker</div>
+          <div class="brand-subtitle" data-i18n="appSubtitle">Track income, expenses & budget — locally.</div>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <div class="select-wrap">
+          <label class="sr-only" for="langSelect" data-i18n="language">Language</label>
+          <select id="langSelect" class="select">
+            <option value="ar">العربية</option>
+            <option value="fr">Français</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+
+        <button id="themeToggle" class="btn btn-ghost" type="button" aria-label="Toggle theme">
+          <span id="themeToggleIcon" aria-hidden="true">🌙</span>
+          <span class="hide-sm" data-i18n="theme">Theme</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="layout">
+      <!-- Sidebar (Desktop) -->
+      <aside class="sidebar" aria-label="Navigation">
+        <nav class="nav">
+          <button class="nav-link is-active" data-target="dashboard" type="button">
+            <span class="nav-ico" aria-hidden="true">📊</span>
+            <span class="nav-txt" data-i18n="dashboard">Dashboard</span>
+          </button>
+          <button class="nav-link" data-target="transactions" type="button">
+            <span class="nav-ico" aria-hidden="true">🧾</span>
+            <span class="nav-txt" data-i18n="transactions">Transactions</span>
+          </button>
+          <button class="nav-link" data-target="statistics" type="button">
+            <span class="nav-ico" aria-hidden="true">📈</span>
+            <span class="nav-txt" data-i18n="statistics">Statistics</span>
+          </button>
+          <button class="nav-link" data-target="reports" type="button">
+            <span class="nav-ico" aria-hidden="true">🧮</span>
+            <span class="nav-txt" data-i18n="reports">Summary & Reports</span>
+          </button>
+          <button class="nav-link" data-target="settings" type="button">
+            <span class="nav-ico" aria-hidden="true">⚙️</span>
+            <span class="nav-txt" data-i18n="settings">Settings</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="local-note" data-i18n="localStorageNote">Your data is stored locally on your device.</div>
+        </div>
+      </aside>
+
+      <!-- Content -->
+      <main class="content">
+        <!-- Dashboard -->
+        <section id="section-dashboard" class="page is-active" aria-label="Dashboard">
+          <div class="page-header">
+            <h1 class="page-title" data-i18n="dashboardTitle">Dashboard</h1>
+            <div class="page-actions">
+              <button class="btn btn-primary" type="button" data-scroll="income-card">
+                <span aria-hidden="true">➕</span>
+                <span data-i18n="addIncome">Add Income</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="grid cards-4">
+            <article class="card">
+              <div class="card-top">
+                <h3 class="card-title" data-i18n="currentBalance">Current Balance</h3>
+              </div>
+              <div class="metric">
+                <div id="currentBalance" class="metric-value">0 DZD</div>
+              </div>
+              <div class="card-sub" data-i18n="currentBalanceHint">Income − Expenses</div>
+            </article>
+
+            <article class="card card-income">
+              <div class="card-top">
+                <h3 class="card-title" data-i18n="incomeThisMonth">Income (This Month)</h3>
+              </div>
+              <div class="metric">
+                <div id="incomeThisMonth" class="metric-value">0 DZD</div>
+              </div>
+              <div class="card-sub" data-i18n="incomeHint">All income added this month</div>
+            </article>
+
+            <article class="card card-expense">
+              <div class="card-top">
+                <h3 class="card-title" data-i18n="expenseThisMonth">Expenses (This Month)</h3>
+              </div>
+              <div class="metric">
+                <div id="expenseThisMonth" class="metric-value">0 DZD</div>
+              </div>
+              <div class="card-sub" data-i18n="expenseHint">All expenses added this month</div>
+            </article>
+
+            <article class="card card-budget">
+              <div class="card-top">
+                <h3 class="card-title" data-i18n="monthlyBudget">Monthly Budget</h3>
+              </div>
+
+              <div class="budget-metrics">
+                <div class="budget-row">
+                  <span class="muted" data-i18n="budgetSet">Budget</span>
+                  <span id="budgetValue" class="budget-value">0 DZD</span>
+                </div>
+                <div class="budget-row">
+                  <span class="muted" data-i18n="spentLabel">Spent</span>
+                  <span id="budgetSpent" class="budget-value">0 DZD</span>
+                </div>
+                <div class="budget-row">
+                  <span class="muted" data-i18n="remainingLabel">Remaining</span>
+                  <span id="budgetRemaining" class="budget-value">0 DZD</span>
+                </div>
+              </div>
+
+              <div class="progress-wrap">
+                <div class="progress-top">
+                  <div class="muted" data-i18n="budgetProgress">Used</div>
+                  <div id="budgetPercent" class="progress-percent">0%</div>
+                </div>
+                <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                  <div id="budgetBar" class="progress-bar" style="width: 0%"></div>
+                </div>
+                <div id="budgetWarning" class="warning hidden" role="status"></div>
+              </div>
+
+            </article>
+          </div>
+
+          <div class="grid cards-2" style="margin-top: 18px;">
+            <div class="card" id="income-card">
+              <div class="card-header-row">
+                <h3 class="section-title" data-i18n="addIncomeFormTitle">Add Income</h3>
+                <span class="badge badge-success" data-i18n="incomeBadge">Income</span>
+              </div>
+
+              <form id="incomeForm" class="form">
+                <div class="form-row">
+                  <label for="incomeAmount" data-i18n="amount">Amount</label>
+                  <input id="incomeAmount" name="amount" inputmode="decimal" type="text" placeholder="e.g. 25000" required />
+                </div>
+                <div class="form-row">
+                  <label for="incomeSource" data-i18n="source">Source</label>
+                  <select id="incomeSource" name="category" required>
+                    <option value="Salary" data-i18n="srcSalary">Salary</option>
+                    <option value="Freelance" data-i18n="srcFreelance">Freelance</option>
+                    <option value="Business" data-i18n="srcBusiness">Business</option>
+                    <option value="Gift" data-i18n="srcGift">Gift</option>
+                    <option value="Other" data-i18n="srcOther">Other</option>
+                  </select>
+                </div>
+                <div class="form-row">
+                  <label for="incomeDate" data-i18n="date">Date</label>
+                  <input id="incomeDate" name="date" type="date" required />
+                </div>
+                <div class="form-row">
+                  <label for="incomeNote" data-i18n="note">Note</label>
+                  <input id="incomeNote" name="note" type="text" maxlength="120" placeholder="optional" />
+                </div>
+
+                <div class="form-actions">
+                  <button class="btn btn-primary" type="submit" data-i18n="addIncomeBtn">Add Income</button>
+                </div>
+                <div class="form-error" id="incomeFormError" aria-live="polite"></div>
+              </form>
+            </div>
+
+            <div class="card" id="expense-card">
+              <div class="card-header-row">
+                <h3 class="section-title" data-i18n="addExpenseFormTitle">Add Expense</h3>
+                <span class="badge badge-danger" data-i18n="expenseBadge">Expense</span>
+              </div>
+
+              <form id="expenseForm" class="form">
+                <div class="form-row">
+                  <label for="expenseAmount" data-i18n="amount">Amount</label>
+                  <input id="expenseAmount" name="amount" inputmode="decimal" type="text" placeholder="e.g. 3500" required />
+                </div>
+                <div class="form-row">
+                  <label for="expenseCategory" data-i18n="category">Category</label>
+                  <select id="expenseCategory" name="category" required>
+                    <option value="Food" data-i18n="catFood">Food</option>
+                    <option value="Transport" data-i18n="catTransport">Transport</option>
+                    <option value="Shopping" data-i18n="catShopping">Shopping</option>
+                    <option value="Bills" data-i18n="catBills">Bills</option>
+                    <option value="Health" data-i18n="catHealth">Health</option>
+                    <option value="Education" data-i18n="catEducation">Education</option>
+                    <option value="Entertainment" data-i18n="catEntertainment">Entertainment</option>
+                    <option value="Other" data-i18n="catOther">Other</option>
+                  </select>
+                </div>
+                <div class="form-row">
+                  <label for="expenseDate" data-i18n="date">Date</label>
+                  <input id="expenseDate" name="date" type="date" required />
+                </div>
+                <div class="form-row">
+                  <label for="expenseNote" data-i18n="note">Note</label>
+                  <input id="expenseNote" name="note" type="text" maxlength="120" placeholder="optional" />
+                </div>
+
+                <div class="form-actions">
+                  <button class="btn btn-primary btn-danger" type="submit" data-i18n="addExpenseBtn">Add Expense</button>
+                </div>
+                <div class="form-error" id="expenseFormError" aria-live="polite"></div>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- Transactions -->
+        <section id="section-transactions" class="page" aria-label="Transactions">
+          <div class="page-header">
+            <h1 class="page-title" data-i18n="transactionsTitle">Transactions</h1>
+          </div>
+
+          <div class="card">
+            <div class="filters">
+              <div class="filter">
+                <label for="searchInput" data-i18n="search">Search</label>
+                <input id="searchInput" type="search" placeholder="e.g. rent, salary..." />
+              </div>
+
+              <div class="filter">
+                <label for="typeFilter" data-i18n="filterType">Filter by Type</label>
+                <select id="typeFilter">
+                  <option value="all" data-i18n="allTypes">All</option>
+                  <option value="Income" data-i18n="incomeLabel">Income</option>
+                  <option value="Expense" data-i18n="expenseLabel">Expense</option>
+                </select>
+              </div>
+
+              <div class="filter">
+                <label for="categoryFilter" data-i18n="filterCategory">Filter by Category/Source</label>
+                <select id="categoryFilter">
+                  <option value="all" data-i18n="allCategories">All</option>
+                </select>
+              </div>
+
+              <div class="filter">
+                <label for="dateFilter" data-i18n="filterDate">Filter by Date</label>
+                <input id="dateFilter" type="date" />
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table class="table" aria-describedby="transactions">
+                <thead>
+                  <tr>
+                    <th data-i18n="type">Type</th>
+                    <th data-i18n="amount">Amount</th>
+                    <th data-i18n="category">Category / Source</th>
+                    <th data-i18n="date">Date</th>
+                    <th data-i18n="note">Note</th>
+                    <th class="th-actions" data-i18n="actions">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="transactionsBody">
+                  <!-- filled by JS -->
+                </tbody>
+              </table>
+
+              <div id="transactionsEmpty" class="empty hidden">
+                <div class="empty-ico" aria-hidden="true">🧾</div>
+                <div class="empty-title" data-i18n="noTransactionsTitle">No transactions yet</div>
+                <div class="empty-desc" data-i18n="noTransactionsDesc">
+                  Add your first income or expense to see your history.
+                </div>
+                <div class="empty-actions">
+                  <button class="btn btn-primary" type="button" data-go="dashboard">
+                    <span aria-hidden="true">➕</span>
+                    <span data-i18n="addFirstBtn">Add first one</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- Statistics -->
+        <section id="section-statistics" class="page" aria-label="Statistics">
+          <div class="page-header">
+            <h1 class="page-title" data-i18n="statisticsTitle">Statistics</h1>
+          </div>
+
+          <div class="grid charts-3">
+            <div class="card chart-card">
+              <h3 class="section-title" data-i18n="expenseByCategory">Expense by Category</h3>
+              <div class="chart-holder">
+                <canvas id="chartExpenseByCategory" aria-label="Expense by Category chart"></canvas>
+              </div>
+            </div>
+
+            <div class="card chart-card">
+              <h3 class="section-title" data-i18n="monthlyExpenses">Monthly Expenses</h3>
+              <div class="chart-holder">
+                <canvas id="chartMonthlyExpenses" aria-label="Monthly Expenses chart"></canvas>
+              </div>
+            </div>
+
+            <div class="card chart-card">
+              <h3 class="section-title" data-i18n="incomeVsExpenses">Income vs Expenses</h3>
+              <div class="chart-holder">
+                <canvas id="chartIncomeVsExpenses" aria-label="Income vs Expenses chart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="card tips-card">
+            <div class="tips-title" data-i18n="tipsTitle">Tip</div>
+            <div class="tips-text" data-i18n="tipsText">
+              Charts update automatically when you add, edit, or delete transactions.
+            </div>
+          </div>
+        </section>
+
+        <!-- Reports / Summary -->
+        <section id="section-reports" class="page" aria-label="Reports">
+          <div class="page-header">
+            <h1 class="page-title" data-i18n="reportsTitle">Summary & Reports</h1>
+          </div>
+
+          <div class="grid cards-4">
+            <article class="card">
+              <h3 class="card-title" data-i18n="totalIncome">Total Income</h3>
+              <div class="metric"><div id="totalIncome" class="metric-value">0 DZD</div></div>
+            </article>
+            <article class="card card-expense">
+              <h3 class="card-title" data-i18n="totalExpenses">Total Expenses</h3>
+              <div class="metric"><div id="totalExpenses" class="metric-value">0 DZD</div></div>
+            </article>
+            <article class="card">
+              <h3 class="card-title" data-i18n="currentBalanceReport">Current Balance</h3>
+              <div class="metric"><div id="currentBalanceReport" class="metric-value">0 DZD</div></div>
+            </article>
+            <article class="card">
+              <h3 class="card-title" data-i18n="numTransactions">Number of Transactions</h3>
+              <div class="metric"><div id="numTransactions" class="metric-value">0</div></div>
+            </article>
+          </div>
+
+          <div class="grid cards-2" style="margin-top: 16px;">
+            <article class="card">
+              <h3 class="card-title" data-i18n="highestExpenseCategory">Highest Expense Category</h3>
+              <div class="metric">
+                <div id="highestExpenseCategory" class="metric-value">—</div>
+              </div>
+            </article>
+            <article class="card">
+              <h3 class="card-title" data-i18n="avgDailySpending">Average Daily Spending</h3>
+              <div class="metric">
+                <div id="avgDailySpending" class="metric-value">0 DZD</div>
+              </div>
+            </article>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <div class="card-header-row">
+              <h3 class="section-title" data-i18n="exportData">Export Data</h3>
+              <button id="exportCsvBtn" class="btn btn-primary" type="button">
+                <span aria-hidden="true">⬇️</span>
+                <span data-i18n="exportCsv">Export CSV</span>
+              </button>
+            </div>
+            <div class="muted" data-i18n="exportHint">This exports all transactions to a CSV file on your device.</div>
+          </div>
+        </section>
+
+        <!-- Settings -->
+        <section id="section-settings" class="page" aria-label="Settings">
+          <div class="page-header">
+            <h1 class="page-title" data-i18n="settingsTitle">Settings</h1>
+          </div>
+
+          <div class="grid cards-2">
+            <div class="card">
+              <h3 class="section-title" data-i18n="preferences">Preferences</h3>
+
+              <div class="form">
+                <div class="form-row">
+                  <label for="monthlyBudgetInput" data-i18n="monthlyBudget">Monthly Budget (DZD)</label>
+                  <input id="monthlyBudgetInput" type="text" inputmode="numeric" placeholder="e.g. 50000" />
+                </div>
+
+                <div class="form-row">
+                  <label for="currencyMode" data-i18n="currencyDisplay">Currency Display</label>
+                  <select id="currencyMode">
+                    <option value="code" data-i18n="currencyCode">Show Code (DZD)</option>
+                    <option value="suffix" data-i18n="currencySuffix">Suffix (50,000 DZD)</option>
+                    <option value="prefix" data-i18n="currencyPrefix">Prefix (DZD 50,000)</option>
+                  </select>
+                </div>
+
+                <div class="form-actions">
+                  <button id="saveSettingsBtn" class="btn btn-primary" type="button" data-i18n="saveBtn">Save</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3 class="section-title" data-i18n="dataManagement">Data Management</h3>
+              <div class="muted" style="margin-bottom: 10px;" data-i18n="localStorageNote">
+                Your data is stored locally on your device.
+              </div>
+
+              <div class="form-actions">
+                <button id="loadDemoDataBtn" class="btn btn-ghost" type="button" data-i18n="loadDemoData">
+                  <span aria-hidden="true">🎲</span>
+                  <span>Load Demo Data</span>
+                </button>
+              </div>
+
+              <div class="divider"></div>
+
+              <div class="form-actions">
+                <button id="clearAllBtn" class="btn btn-danger" type="button" data-i18n="clearAllData">
+                  <span aria-hidden="true">🧨</span>
+                  <span>Clear All Data</span>
+                </button>
+              </div>
+              <div class="muted" data-i18n="clearAllWarning">This will permanently remove your local data.</div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Mobile Bottom Nav -->
+    <nav class="bottom-nav" aria-label="Bottom navigation">
+      <button class="bottom-nav-link is-active" data-target="dashboard" type="button">
+        <span aria-hidden="true">📊</span>
+        <span data-i18n="dashboard">Dashboard</span>
+      </button>
+      <button class="bottom-nav-link" data-target="transactions" type="button">
+        <span aria-hidden="true">🧾</span>
+        <span data-i18n="transactions">Transactions</span>
+      </button>
+      <button class="bottom-nav-link" data-target="statistics" type="button">
+        <span aria-hidden="true">📈</span>
+        <span data-i18n="statistics">Statistics</span>
+      </button>
+      <button class="bottom-nav-link" data-target="settings" type="button">
+        <span aria-hidden="true">⚙️</span>
+        <span data-i18n="settings">Settings</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Edit Modal -->
+  <div id="editModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Edit transaction">
+    <div class="modal-backdrop" data-close="modal"></div>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div>
+          <div id="editModalTitle" class="modal-title">Edit</div>
+          <div class="modal-subtitle" data-i18n="editModalHint">Update fields and save.</div>
+        </div>
+        <button class="btn btn-ghost" type="button" data-close="modal" aria-label="Close">✕</button>
+      </div>
+
+      <form id="editForm" class="form">
+        <input type="hidden" id="editId" />
+        <input type="hidden" id="editType" />
+
+        <div class="form-row">
+          <label for="editAmount" data-i18n="amount">Amount</label>
+          <input id="editAmount" type="text" inputmode="decimal" required />
+        </div>
+
+        <div class="form-row">
+          <label for="editCategory" data-i18n="category">Category / Source</label>
+          <select id="editCategory" required></select>
+        </div>
+
+        <div class="form-row">
+          <label for="editDate" data-i18n="date">Date</label>
+          <input id="editDate" type="date" required />
+        </div>
+
+        <div class="form-row">
+          <label for="editNote" data-i18n="note">Note</label>
+          <input id="editNote" type="text" maxlength="120" />
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit" data-i18n="saveChanges">Save Changes</button>
+        </div>
+        <div class="form-error" id="editFormError" aria-live="polite"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Confirm Modal -->
+  <div id="confirmModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Confirm delete">
+    <div class="modal-backdrop" data-close="modal"></div>
+    <div class="modal-dialog modal-sm">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title" data-i18n="confirmTitle">Confirm</div>
+          <div class="modal-subtitle" id="confirmText" data-i18n="confirmText">Are you sure?</div>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <div class="confirm-actions">
+          <button class="btn btn-ghost" type="button" data-close="modal" data-i18n="cancelBtn">Cancel</button>
+          <button id="confirmYesBtn" class="btn btn-danger" type="button" data-i18n="deleteBtn">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toasts -->
+  <div id="toastContainer" class="toast-container" aria-live="polite" aria-relevant="additions"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
